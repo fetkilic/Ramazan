@@ -7,63 +7,58 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ramadan">
-    
-    <link rel="apple-touch-icon" href="icon.png?v=5">
-    <link rel="apple-touch-startup-image" href="icon.png?v=5">
-    
-    <meta name="theme-color" content="#021a1a">
-    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'icon.png?v=5','sizes':'512x512','type':'image/png'}]}">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg-gradient: radial-gradient(circle at top, #064e43 0%, #021a1a 100%); --glass: rgba(255, 255, 255, 0.04); --glass-border: rgba(255, 255, 255, 0.1); --gold: linear-gradient(135deg, #fde68a 0%, #d97706 100%); }
-        body { background: var(--bg-gradient); background-attachment: fixed; font-family: 'Inter', sans-serif; color: #ffffff; margin: 0; min-height: 100vh; overflow-x: hidden; }
-        .stars-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; pointer-events: none; z-index: 0; }
-        .app-container { position: relative; z-index: 10; max-width: 450px; margin: 0 auto; padding: calc(1rem + env(safe-area-inset-top)) 1.5rem 5rem; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 28px; }
+        body { background: var(--bg-gradient); background-attachment: fixed; font-family: 'Inter', sans-serif; color: #ffffff; margin: 0; min-height: 100vh; overflow-x: hidden; padding-bottom: 120px; }
+        .stars-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; pointer-events: none; z-index: 1; }
+        .app-container { position: relative; z-index: 10; max-width: 450px; margin: 0 auto; padding: calc(1rem + env(safe-area-inset-top)) 1.5rem 2rem; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 28px; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .gold-title { background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Playfair Display', serif; }
+        .celebrate-glow { box-shadow: 0 0 60px rgba(217, 119, 6, 0.5); border-color: rgba(253, 230, 138, 0.6); transform: scale(1.02); background: rgba(255, 255, 255, 0.08); }
         
-        /* Install Banner & Modal */
-        #installBanner { display: none; position: fixed; top: 1.5rem; right: 1.5rem; z-index: 100; }
-        .install-btn { background: #f59e0b; color: #000; font-weight: 900; font-size: 10px; padding: 10px 18px; border-radius: 50px; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); border: 2px solid rgba(255,255,255,0.3); text-transform: uppercase; }
-        #installModal { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #042f28; border: 1px solid rgba(253, 230, 138, 0.3); border-radius: 32px; padding: 30px; text-align: center; max-width: 320px; }
+        /* Dua Banner Style */
+        .dua-banner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: calc(100% - 3rem); max-width: 400px; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; padding: 15px 20px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideUp 1s ease-out; }
+        @keyframes slideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        .lang-picker { position: absolute; top: env(safe-area-inset-top); left: 1rem; display: flex; gap: 4px; z-index: 100; }
+        .lang-btn { padding: 10px; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; opacity: 0.4; transition: opacity 0.3s; }
+        .lang-btn.active { opacity: 1; }
+        .btn-interact:active { transform: scale(0.95); }
+        button, select { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
     <div class="stars-overlay"></div>
-
-    <div id="installBanner">
-        <button onclick="showInstallInfo()" id="installBtnText" class="install-btn">Save as app 📱</button>
-    </div>
-
     <div class="app-container">
-        <div class="flex justify-center gap-6 mb-8 text-[11px] tracking-widest font-black">
-            <button onclick="setLanguage('tr')" id="btn-tr" class="opacity-40">TR</button> 
-            <button onclick="setLanguage('nl')" id="btn-nl" class="opacity-40">NL</button> 
-            <button onclick="setLanguage('en')" id="btn-en" class="opacity-40">EN</button>
+        <div class="lang-picker">
+            <button onclick="setLanguage('tr')" id="btn-tr" class="lang-btn">TR</button> 
+            <button onclick="setLanguage('nl')" id="btn-nl" class="lang-btn">NL</button> 
+            <button onclick="setLanguage('en')" id="btn-en" class="lang-btn">EN</button>
         </div>
-
-        <header class="text-center mb-8">
+        
+        <header class="text-center mb-8 mt-6">
             <h1 id="mainTitle" class="gold-title text-5xl mb-2">Ramadan</h1>
             <p class="text-[10px] tracking-[0.6em] opacity-30 uppercase font-bold">Smart Tracker 2026</p>
         </header>
 
         <div id="countdownContainer" class="hidden mb-10 text-center">
             <p id="countdownLabel" class="text-[10px] tracking-[0.2em] mb-2 text-amber-200/40 uppercase font-bold"></p>
-            <div id="timer" class="text-7xl font-black tracking-tighter tabular-nums text-white mb-4">00:00:00</div>
-            <button onclick="shareStatus()" id="shareBtn" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-bold tracking-widest uppercase text-amber-200/80"></button>
+            <div id="timer" class="text-7xl font-black tracking-tighter tabular-nums text-white mb-2">00:00:00</div>
+            <p id="wishLabel" class="text-sm font-light italic text-amber-100/60 mb-6 h-5"></p>
+            <button onclick="shareStatus()" id="shareBtn" class="btn-interact bg-white/5 border border-white/10 rounded-xl px-6 py-2 text-[10px] font-bold tracking-widest uppercase text-amber-200/80 transition-transform"></button>
         </div>
 
-        <div class="glass-card p-6 mb-8 space-y-6">
+        <div class="glass-card p-6 mb-8 space-y-6" id="inputCard">
             <div class="flex flex-col gap-2">
-                <span id="lblCountry" class="text-[9px] tracking-widest font-bold opacity-40 ml-1"></span>
+                <span id="lblCountry" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase"></span>
                 <select id="countrySelect" class="bg-black/40 border border-white/10 text-white rounded-xl p-3 outline-none"></select>
             </div>
             <div class="flex flex-col gap-2">
-                <span id="lblCity" class="text-[9px] tracking-widest font-bold opacity-40 ml-1"></span>
+                <span id="lblCity" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase"></span>
                 <select id="citySelect" disabled class="bg-black/40 border border-white/10 text-white rounded-xl p-3 outline-none opacity-40"></select>
             </div>
         </div>
@@ -80,72 +75,61 @@
                     <span id="iftarTime" class="text-3xl font-black tracking-tighter">--:--</span>
                 </div>
             </div>
-            <button onclick="clearStorage()" id="resetBtn" class="mt-10 text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-white transition"></button>
+            <button onclick="clearStorage()" id="resetBtn" class="mt-10 text-[9px] font-black uppercase tracking-widest text-white/20 p-2"></button>
         </div>
     </div>
 
-    <div id="installModal" onclick="this.style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 id="modalTitle" class="text-amber-200 font-bold text-xl mb-4"></h3>
-            <p id="modalDesc" class="text-sm text-white/70 mb-8"></p>
-            <div class="space-y-6 text-left text-xs pt-6 border-t border-white/5">
-                <div class="flex items-center gap-4">
-                    <span class="bg-amber-500/20 text-amber-200 w-8 h-8 flex items-center justify-center rounded-full font-bold">1</span>
-                    <span id="step1"></span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="bg-amber-500/20 text-amber-200 w-8 h-8 flex items-center justify-center rounded-full font-bold">2</span>
-                    <span id="step2"></span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="bg-amber-500/20 text-amber-200 w-8 h-8 flex items-center justify-center rounded-full font-bold">3</span>
-                    <span id="step3"></span>
-                </div>
-            </div>
-            <button onclick="document.getElementById('installModal').style.display='none'" class="mt-10 w-full bg-white/10 text-white font-bold py-3 rounded-2xl">OK</button>
-        </div>
+    <div class="dua-banner text-center">
+        <p class="text-[9px] tracking-[0.3em] text-amber-200/50 font-bold uppercase mb-1">Dua van de dag</p>
+        <p id="duaText" class="text-xs font-medium leading-relaxed text-white/90"></p>
     </div>
 
     <script>
         const translations = { 
             nl: { 
-                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Kies Land", selectCity: "Kies Stad", shareBtn: "Deel status 📤", resetBtn: "Locatie Wijzigen",
-                installBtn: "Save as app 📱", modalTitle: "Installeer App", modalDesc: "Voeg de tracker toe aan je beginscherm voor snelle toegang:",
-                step1: "Tik op de <b>Deel-knop</b> <img src='https://upload.wikimedia.org/wikipedia/commons/d/d5/IOS_Share_Icon.png' class='inline w-4 h-4 invert'>",
-                step2: "Scroll naar beneden in het menu", step3: "Tik op <b>'Zet op beginscherm'</b>",
-                shareTextIftar: "Nog {time} tot Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "Nog {time} tot Sahur in {city}! ({target}) 🌙✨"
+                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Kies Land", selectCity: "Kies Stad", shareBtn: "Deel status 📤", resetBtn: "Locatie Wijzigen", shareMsg: "Nog {time} tot {target} in {city}! 🌙✨", wishIftar: "Eet smakelijk! 🤲", wishSahur: "Ramadan Mubarak! 🌙",
+                duaLabel: "Dua van de dag",
+                duas: [
+                    "O Allah, vergeef mij en heb medelijden met mij.",
+                    "O Allah, ik vraag U om nuttige kennis en goede voorzieningen.",
+                    "Onze Heer, schenk ons het goede in deze wereld en het Hiernamaals.",
+                    "O Allah, U bent de Vergever en U houdt van vergeving, vergeef mij.",
+                    "O Allah, laat mijn vasten geaccepteerd worden door U."
+                ]
             },
             tr: { 
-                mainTitle: "Ramazan", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke Seç", selectCity: "Şehir Seç", shareBtn: "Paylaş 📤", resetBtn: "Şehir Değiştir",
-                installBtn: "App olarak indir 📱", modalTitle: "Uygulamayı Yükle", modalDesc: "Hızlı erişim için takipçiyi ana ekranınıza ekleyin:",
-                step1: "<b>Paylaş</b> düğmesine dokunun <img src='https://upload.wikimedia.org/wikipedia/commons/d/d5/IOS_Share_Icon.png' class='inline w-4 h-4 invert'>",
-                step2: "Menüde aşağı kaydırın", step3: "<b>'Ana Ekra Ekle'</b> seçeneğine dokunun",
-                shareTextIftar: "{city} için İftara kalan süre: {time}! ({target}) 🌙✨", shareTextSahur: "{city} için Sahura kalan süre: {time}! ({target}) 🌙✨"
+                mainTitle: "Ramazan", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke Seç", selectCity: "Şehir Seç", shareBtn: "Paylaş 📤", resetBtn: "Şehir Değiştir", shareMsg: "{city} için {target} vaktine kalan süre: {time}! 🌙✨", wishIftar: "Allah kabul etsin! 🤲", wishSahur: "Hayırlı Ramazanlar! 🌙",
+                duaLabel: "Günün Duası",
+                duas: [
+                    "Allah'ım, beni bağışla ve bana merhamet et.",
+                    "Allah'ım, Senden faydalı bir ilim ve helal rızık isterim.",
+                    "Rabbimiz, bize dünyada da ahirette de iyilik ver.",
+                    "Allah'ım, Sen affedicisin, affı seversin, beni affet.",
+                    "Allah'ım, tuttuğumuz oruçları katında kabul eyle."
+                ]
             },
             en: { 
-                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Select Country", selectCity: "Select City", shareBtn: "Share status 📤", resetBtn: "Change Location",
-                installBtn: "Save as app 📱", modalTitle: "Install App", modalDesc: "Add the tracker to your home screen for quick access:",
-                step1: "Tap the <b>Share button</b> <img src='https://upload.wikimedia.org/wikipedia/commons/d/d5/IOS_Share_Icon.png' class='inline w-4 h-4 invert'>",
-                step2: "Scroll down in the menu", step3: "Tap <b>'Add to Home Screen'</b>",
-                shareTextIftar: "{time} remaining until Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "{time} remaining until Sahur in {city}! ({target}) 🌙✨"
+                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Select Country", selectCity: "Select City", shareBtn: "Share status 📤", resetBtn: "Change Location", shareMsg: "{time} remaining until {target} in {city}! 🌙✨", wishIftar: "Enjoy your Iftar! 🤲", wishSahur: "Ramadan Mubarak! 🌙",
+                duaLabel: "Dua of the Day",
+                duas: [
+                    "O Allah, forgive me and have mercy on me.",
+                    "O Allah, I ask You for beneficial knowledge and good provision.",
+                    "Our Lord, grant us good in this world and the Hereafter.",
+                    "O Allah, You are the Forgiver and love forgiveness, so forgive me.",
+                    "O Allah, let my fasting be accepted by You."
+                ]
             }
         };
 
         let currentLang = localStorage.getItem('lang') || 'nl'; 
-        let prayerTimes = null; 
-        let isWaitingForIftar = true;
-
-        // Alleen tonen in de browser, niet als de app al is opgeslagen
-        if (!window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
-            document.getElementById('installBanner').style.display = 'block';
-        }
-
-        function showInstallInfo() { document.getElementById('installModal').style.display = 'flex'; }
+        let prayerTimes = null;
+        let activeTargetKey = "";
+        let isCelebrating = false;
 
         function setLanguage(lang) { 
             currentLang = lang; localStorage.setItem('lang', lang); 
-            ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => document.getElementById(id).classList.add('opacity-40'));
-            document.getElementById('btn-' + lang).classList.remove('opacity-40');
+            ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => document.getElementById(id).classList.remove('active'));
+            document.getElementById('btn-' + lang).classList.add('active');
             updateUIStrings(); 
         }
 
@@ -156,24 +140,37 @@
             document.getElementById('labelIftar').innerText = t.labelIftar; 
             document.getElementById('shareBtn').innerText = t.shareBtn;
             document.getElementById('resetBtn').innerText = t.resetBtn;
-            document.getElementById('lblCountry').innerText = t.selectCountry.toUpperCase();
-            document.getElementById('lblCity').innerText = t.selectCity.toUpperCase();
-            document.getElementById('installBtnText').innerText = t.installBtn;
-            document.getElementById('modalTitle').innerText = t.modalTitle;
-            document.getElementById('modalDesc').innerText = t.modalDesc;
-            document.getElementById('step1').innerHTML = t.step1;
-            document.getElementById('step2').innerText = t.step2;
-            document.getElementById('step3').innerHTML = t.step3;
+            document.getElementById('lblCountry').innerText = t.selectCountry;
+            document.getElementById('lblCity').innerText = t.selectCity;
+            
+            // Update Dua
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+            const duaIndex = dayOfYear % t.duas.length;
+            document.getElementById('duaText').innerText = t.duas[duaIndex];
+            document.querySelector('.dua-banner p:first-child').innerText = t.duaLabel;
+        }
+
+        function triggerCelebration() {
+            if (isCelebrating) return;
+            isCelebrating = true;
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#fde68a', '#d97706', '#ffffff'] });
+            const card = document.getElementById('resultCard');
+            card.classList.add('celebrate-glow');
+            document.getElementById('wishLabel').innerText = activeTargetKey === 'iftar' ? translations[currentLang].wishIftar : translations[currentLang].wishSahur;
+            setTimeout(() => {
+                card.classList.remove('celebrate-glow');
+                document.getElementById('wishLabel').innerText = "";
+                isCelebrating = false;
+            }, 10000);
         }
 
         function shareStatus() {
+            const t = translations[currentLang];
             const timeLeft = document.getElementById('timer').innerText;
             const city = document.getElementById('displayCity').innerText;
-            const t = translations[currentLang];
-            const targetTime = isWaitingForIftar ? prayerTimes.Maghrib : prayerTimes.Imsak;
-            const template = isWaitingForIftar ? t.shareTextIftar : t.shareTextSahur;
-            const text = template.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetTime);
-            if (navigator.share) { navigator.share({ title: 'Ramadan Tracker', text: text }); }
+            const targetName = activeTargetKey === 'sahur' ? t.labelSahur : t.labelIftar;
+            const message = t.shareMsg.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetName);
+            if (navigator.share) navigator.share({ title: 'Ramadan Tracker', text: message });
         }
 
         async function fetchCountries() { 
@@ -184,29 +181,27 @@
             json.data.forEach(c => s.add(new Option(c.country, c.country)));
         }
 
-        async function loadCities(country) { 
-            const s = document.getElementById('citySelect'); s.disabled = true;
+        document.getElementById('countrySelect').onchange = async (e) => {
+            const s = document.getElementById('citySelect');
             const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { 
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ country: country }) 
+                body: JSON.stringify({ country: e.target.value }) 
             });
             const json = await res.json();
             s.innerHTML = `<option value="">--</option>`;
             json.data.forEach(c => s.add(new Option(c, c)));
             s.disabled = false; s.classList.remove('opacity-40');
-        }
+        };
 
-        document.getElementById('countrySelect').onchange = (e) => { if(e.target.value) loadCities(e.target.value); };
         document.getElementById('citySelect').onchange = (e) => { 
-            if(e.target.value) {
-                localStorage.setItem('selectedCountry', document.getElementById('countrySelect').value);
-                localStorage.setItem('selectedCity', e.target.value);
-                updateData(e.target.value, document.getElementById('countrySelect').value);
-            }
+            const country = document.getElementById('countrySelect').value;
+            localStorage.setItem('selectedCountry', country);
+            localStorage.setItem('selectedCity', e.target.value);
+            updateData(e.target.value, country);
         };
 
         async function updateData(city, country) { 
-            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
+            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13&school=1`);
             const json = await res.json();
             prayerTimes = json.data.timings;
             document.getElementById('displayCity').innerText = city;
@@ -216,25 +211,41 @@
             document.getElementById('countdownContainer').classList.remove('hidden');
             startTimer();
         }
-        
+
         function startTimer() { 
             if(window.timerInterval) clearInterval(window.timerInterval);
-            window.timerInterval = setInterval(() => { 
+            window.timerInterval = setInterval(() => {
+                if (isCelebrating) return;
+                const t = translations[currentLang];
                 const now = new Date(); 
-                const parseT = (s, addDays = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(addDays) d.setDate(d.getDate() + 1); return d; }; 
-                const imsak = parseT(prayerTimes.Imsak); const iftar = parseT(prayerTimes.Maghrib); 
+                const parseT = (s, n = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(n) d.setDate(d.getDate()+1); return d; }; 
+                const imsak = parseT(prayerTimes.Imsak); 
+                const iftar = parseT(prayerTimes.Maghrib); 
                 let target, label; 
-                if (now < imsak) { target = imsak; label = translations[currentLang].waitSahur; isWaitingForIftar = false; }
-                else if (now < iftar) { target = iftar; label = translations[currentLang].waitIftar; isWaitingForIftar = true; }
-                else { target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; isWaitingForIftar = false; } 
+                if (now < imsak) { target = imsak; label = t.waitSahur; activeTargetKey = 'sahur'; }
+                else if (now < iftar) { target = iftar; label = t.waitIftar; activeTargetKey = 'iftar'; }
+                else { target = parseT(prayerTimes.Imsak, 1); label = t.waitSahur; activeTargetKey = 'sahur'; } 
                 const diff = target - now; 
+                if (diff <= 1000 && diff > -1000) triggerCelebration();
                 const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); 
                 document.getElementById('countdownLabel').innerText = label; 
                 document.getElementById('timer').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; 
             }, 1000); 
         }
+
         function clearStorage() { localStorage.clear(); location.reload(); }
-        async function init() { setLanguage(currentLang); const sc = localStorage.getItem('selectedCountry'); const sci = localStorage.getItem('selectedCity'); await fetchCountries(); if (sc) { document.getElementById('countrySelect').value = sc; await loadCities(sc); if (sci) { document.getElementById('citySelect').value = sci; updateData(sci, sc); } } }
+        async function init() { 
+            setLanguage(currentLang); 
+            await fetchCountries(); 
+            const sc = localStorage.getItem('selectedCountry'); 
+            const sci = localStorage.getItem('selectedCity'); 
+            if (sc && sci) {
+                document.getElementById('countrySelect').value = sc;
+                await document.getElementById('countrySelect').onchange({target:{value:sc}});
+                document.getElementById('citySelect').value = sci;
+                updateData(sci, sc);
+            }
+        }
         init();
     </script>
 </body>
