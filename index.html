@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ramadan Smart Tracker</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#021a1a">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2319/2319914.png">
+
+    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'https://cdn-icons-png.flaticon.com/512/2319/2319914.png','sizes':'512x512','type':'image/png'}]}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #021a1a;
+            --bg-gradient: radial-gradient(circle at top, #064e43 0%, #021a1a 100%);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --gold: linear-gradient(135deg, #fde68a 0%, #d97706 100%);
+        }
+
+        /* App-instellingen: Voorkomt scrollen en tekstselectie */
+        body {
+            background: var(--bg-gradient);
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Houdt alles op één scherm */
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .stars-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+        }
+
+        .gold-title {
+            background: var(--gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .glow-sahur { border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .glow-iftar { border: 2px solid #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+
+        .time-label { font-size: 0.65rem; letter-spacing: 0.15em; font-weight: 700; opacity: 0.6; }
+        
+        select {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fde68a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1rem;
+        }
+
+        /* Container voor mobiel scherm vulling */
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 flex flex-col items-center">
+    <div class="stars-overlay"></div>
+
+    <div class="max-w-md w-full relative z-10 app-container overflow-y-auto">
+        
+        <div>
+            <div class="flex justify-center gap-4 mt-4 mb-6">
+                <button onclick="setLanguage('tr')" class="opacity-50 hover:opacity-100 font-bold text-[10px] tracking-widest">TR</button>
+                <button onclick="setLanguage('nl')" class="opacity-50 hover:opacity-100 font-bold text-[10px] tracking-widest">NL</button>
+                <button onclick="setLanguage('en')" class="opacity-50 hover:opacity-100 font-bold text-[10px] tracking-widest">EN</button>
+            </div>
+
+            <header class="text-center mb-6">
+                <h1 id="mainTitle" class="gold-title text-4xl mb-1">Ramadan 2026</h1>
+                <p class="text-[9px] tracking-[0.5em] opacity-40 uppercase">Smart Companion</p>
+            </header>
+
+            <div onclick="nextFact()" class="glass-card p-5 mb-6 cursor-pointer active:scale-95 transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="text-2xl">🌙</div>
+                    <div>
+                        <h4 id="factLabel" class="text-amber-300 text-[9px] font-black uppercase tracking-widest mb-1"></h4>
+                        <p id="factText" class="text-[11px] leading-relaxed italic text-emerald-50/80"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="countdownContainer" class="hidden text-center mb-6">
+                <p id="countdownLabel" class="time-label uppercase text-amber-200/60 mb-2"></p>
+                <div id="timer" class="text-6xl font-black tracking-tighter tabular-nums text-white drop-shadow-2xl">00:00:00</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="glass-card p-5 mb-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <span id="txtCountry" class="time-label ml-1">LAND</span>
+                        <select id="countrySelect" class="w-full p-3 rounded-xl text-xs outline-none"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <span id="txtCity" class="time-label ml-1">STAD</span>
+                        <select id="citySelect" disabled class="w-full p-3 rounded-xl text-xs outline-none opacity-50"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultCard" class="hidden glass-card p-6 mb-4 text-center">
+                <h2 id="displayCity" class="gold-title text-xl font-bold uppercase mb-6 tracking-widest"></h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div id="imsakBox" class="bg-black/20 rounded-2xl p-4 border border-white/5 transition-all">
+                        <span id="labelSahur" class="time-label block mb-2">SAHUR</span>
+                        <span id="imsakTime" class="text-2xl font-black tracking-tighter">--:--</span>
+                    </div>
+                    <div id="iftarBox" class="bg-black/20 rounded-2xl p-4 border border-white/5 transition-all">
+                        <span id="labelIftar" class="time-label block mb-2 text-orange-400">IFTAR</span>
+                        <span id="iftarTime" class="text-2xl font-black tracking-tighter">--:--</span>
+                    </div>
+                </div>
+
+                <button onclick="clearStorage()" class="mt-4 text-[8px] uppercase tracking-[0.2em] text-white/20 hover:text-white transition">Reset Locatie</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            nl: { mainTitle: "Ramadan 2026", factLabel: "Wist je dat?", labelSahur: "Sahur", labelIftar: "Iftar", waitSahur: "Tot Sahur", waitIftar: "Tot Iftar", selectCountry: "Land", selectCity: "Stad", facts: ["De Ramadan is de maand van de Koran.", "De Profeet verbrak het vasten met dadels.", "Sahur is een gezegende maaltijd.", "Vasten versterkt de discipline."] },
+            tr: { mainTitle: "Ramazan 2026", factLabel: "Biliyor musunuz?", labelSahur: "Sahur", labelIftar: "İftar", waitSahur: "Sahura Kalan", waitIftar: "İftara Kalan", selectCountry: "Ülke", selectCity: "Şehir", facts: ["Ramazan Kur'an ayıdır.", "Oruç şükürdür.", "Sahurda bereket vardır.", "Oruç kötülüklere kalkandır."] },
+            en: { mainTitle: "Ramadan 2026", factLabel: "Did you know?", labelSahur: "Sahur", labelIftar: "Iftar", waitSahur: "Until Sahur", waitIftar: "Until Iftar", selectCountry: "Country", selectCity: "City", facts: ["Ramadan is the month of Quran.", "The Prophet broke fast with dates.", "Sahur has blessings.", "Fasting builds character."] }
+        };
+
+        let currentLang = localStorage.getItem('lang') || 'nl';
+        let prayerTimes = null;
+        let factIndex = 0;
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            updateUIStrings();
+        }
+
+        function updateUIStrings() {
+            const t = translations[currentLang];
+            document.getElementById('mainTitle').innerText = t.mainTitle;
+            document.getElementById('factLabel').innerText = t.factLabel;
+            document.getElementById('labelSahur').innerText = t.labelSahur;
+            document.getElementById('labelIftar').innerText = t.labelIftar;
+            document.getElementById('factText').innerText = t.facts[factIndex];
+        }
+
+        function nextFact() {
+            factIndex = (factIndex + 1) % translations[currentLang].facts.length;
+            document.getElementById('factText').innerText = translations[currentLang].facts[factIndex];
+        }
+
+        async function init() {
+            updateUIStrings();
+            await fetchCountries();
+            const sc = localStorage.getItem('selectedCountry');
+            const sci = localStorage.getItem('selectedCity');
+            if (sc) {
+                document.getElementById('countrySelect').value = sc;
+                await loadCities(sc);
+                if (sci) {
+                    document.getElementById('citySelect').value = sci;
+                    updateData(sci, sc);
+                }
+            }
+        }
+
+        async function fetchCountries() {
+            const res = await fetch('https://countriesnow.space/api/v0.1/countries');
+            const json = await res.json();
+            const s = document.getElementById('countrySelect');
+            s.innerHTML = `<option value="">${translations[currentLang].selectCountry}</option>`;
+            json.data.forEach(c => s.add(new Option(c.country, c.country)));
+        }
+
+        async function loadCities(country) {
+            const s = document.getElementById('citySelect');
+            s.disabled = true;
+            const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ country: country })
+            });
+            const json = await res.json();
+            s.innerHTML = `<option value="">${translations[currentLang].selectCity}</option>`;
+            json.data.forEach(c => s.add(new Option(c, c)));
+            s.disabled = false;
+        }
+
+        document.getElementById('countrySelect').onchange = (e) => loadCities(e.target.value);
+        document.getElementById('citySelect').onchange = (e) => {
+            localStorage.setItem('selectedCountry', document.getElementById('countrySelect').value);
+            localStorage.setItem('selectedCity', e.target.value);
+            updateData(e.target.value, document.getElementById('countrySelect').value);
+        };
+
+        async function updateData(city, country) {
+            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
+            const json = await res.json();
+            prayerTimes = json.data.timings;
+            document.getElementById('displayCity').innerText = city;
+            document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
+            document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
+            document.getElementById('resultCard').classList.remove('hidden');
+            document.getElementById('countdownContainer').classList.remove('hidden');
+            startTimer();
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const parseT = (s, addDays = 0) => {
+                    const [h, m] = s.split(':');
+                    const d = new Date(); d.setHours(h, m, 0);
+                    if(addDays) d.setDate(d.getDate() + 1);
+                    return d;
+                };
+
+                const imsak = parseT(prayerTimes.Imsak);
+                const iftar = parseT(prayerTimes.Maghrib);
+                let target, label;
+
+                if (now < imsak) { 
+                    target = imsak; label = translations[currentLang].waitSahur; 
+                    document.getElementById('imsakBox').className = "bg-black/20 rounded-2xl p-4 glow-sahur";
+                    document.getElementById('iftarBox').className = "bg-black/20 rounded-2xl p-4 border border-white/5";
+                } else if (now < iftar) { 
+                    target = iftar; label = translations[currentLang].waitIftar; 
+                    document.getElementById('iftarBox').className = "bg-black/20 rounded-2xl p-4 glow-iftar";
+                    document.getElementById('imsakBox').className = "bg-black/20 rounded-2xl p-4 border border-white/5";
+                } else { 
+                    target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; 
+                }
+
+                const diff = target - now;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('countdownLabel').innerText = label;
+                document.getElementById('timer').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function clearStorage() { localStorage.clear(); location.reload(); }
+        init();
+    </script>
+</body>
+</html>
