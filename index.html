@@ -13,34 +13,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg-gradient: radial-gradient(circle at top, #064e43 0%, #021a1a 100%); --glass: rgba(255, 255, 255, 0.04); --glass-border: rgba(255, 255, 255, 0.1); --gold: linear-gradient(135deg, #fde68a 0%, #d97706 100%); }
-        body { background: var(--bg-gradient); background-attachment: fixed; font-family: 'Inter', sans-serif; color: #ffffff; margin: 0; min-height: 100vh; overflow-x: hidden; padding-bottom: 120px; }
+        body { background: var(--bg-gradient); background-attachment: fixed; font-family: 'Inter', sans-serif; color: #ffffff; margin: 0; min-height: 100vh; overflow-x: hidden; padding-bottom: env(safe-area-inset-bottom); }
         .stars-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; pointer-events: none; z-index: 1; }
-        .app-container { position: relative; z-index: 10; max-width: 450px; margin: 0 auto; padding: calc(1rem + env(safe-area-inset-top)) 1.5rem 2rem; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 28px; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .app-container { position: relative; z-index: 10; max-width: 450px; margin: 0 auto; padding: calc(1.5rem + env(safe-area-inset-top)) 1.5rem 2rem; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 28px; }
         .gold-title { background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Playfair Display', serif; }
-        .celebrate-glow { box-shadow: 0 0 60px rgba(217, 119, 6, 0.5); border-color: rgba(253, 230, 138, 0.6); transform: scale(1.02); background: rgba(255, 255, 255, 0.08); }
         
-        /* Dua Banner Style */
-        .dua-banner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: calc(100% - 3rem); max-width: 400px; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; padding: 15px 20px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideUp 1s ease-out; }
-        @keyframes slideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        .search-container { position: relative; width: 100%; }
+        .search-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 12px 40px 12px 12px; outline: none; font-size: 14px; }
+        .clear-btn { position: absolute; right: 12px; top: 38px; color: rgba(255,255,255,0.3); font-size: 18px; cursor: pointer; display: none; padding: 5px; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: #021a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 150; display: none; margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .result-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        .result-item:hover { background: rgba(255,255,255,0.1); }
 
-        .lang-picker { position: absolute; top: env(safe-area-inset-top); left: 1rem; display: flex; gap: 4px; z-index: 100; }
-        .lang-btn { padding: 10px; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; opacity: 0.4; transition: opacity 0.3s; }
+        #imsakiyeModal { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.9); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 20px; padding-top: calc(40px + env(safe-area-inset-top)); }
+        .modal-content { max-width: 400px; margin: 0 auto; height: 75vh; overflow-y: auto; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+        
+        .top-nav { position: absolute; top: env(safe-area-inset-top); left: 0; right: 0; padding: 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .lang-picker { display: flex; gap: 4px; }
+        .lang-btn { padding: 8px; font-size: 11px; font-weight: 900; opacity: 0.4; }
         .lang-btn.active { opacity: 1; }
-        .btn-interact:active { transform: scale(0.95); }
-        button, select { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .imsakiye-btn { background: var(--gold); color: #021a1a; padding: 6px 16px; border-radius: 12px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+
+        .imsakiye-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+        .imsakiye-table tr.today { background: rgba(217, 119, 6, 0.2); color: #fde68a; font-weight: bold; }
+        .imsakiye-table td { padding: 14px 10px; text-align: center; }
+
+        .dua-banner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: calc(100% - 3rem); max-width: 400px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; z-index: 50; text-align: center; }
     </style>
 </head>
 <body>
     <div class="stars-overlay"></div>
-    <div class="app-container">
+    
+    <div class="top-nav">
         <div class="lang-picker">
             <button onclick="setLanguage('tr')" id="btn-tr" class="lang-btn">TR</button> 
             <button onclick="setLanguage('nl')" id="btn-nl" class="lang-btn">NL</button> 
             <button onclick="setLanguage('en')" id="btn-en" class="lang-btn">EN</button>
         </div>
-        
-        <header class="text-center mb-8 mt-6">
+        <button onclick="toggleImsakiye(true)" id="imsakBtn" class="imsakiye-btn shadow-lg"></button>
+    </div>
+
+    <div class="app-container">
+        <header class="text-center mb-8 mt-12">
             <h1 id="mainTitle" class="gold-title text-5xl mb-2">Ramadan</h1>
             <p class="text-[10px] tracking-[0.6em] opacity-30 uppercase font-bold">Smart Tracker 2026</p>
         </header>
@@ -48,23 +63,30 @@
         <div id="countdownContainer" class="hidden mb-10 text-center">
             <p id="countdownLabel" class="text-[10px] tracking-[0.2em] mb-2 text-amber-200/40 uppercase font-bold"></p>
             <div id="timer" class="text-7xl font-black tracking-tighter tabular-nums text-white mb-2">00:00:00</div>
-            <p id="wishLabel" class="text-sm font-light italic text-amber-100/60 mb-6 h-5"></p>
-            <button onclick="shareStatus()" id="shareBtn" class="btn-interact bg-white/5 border border-white/10 rounded-xl px-6 py-2 text-[10px] font-bold tracking-widest uppercase text-amber-200/80 transition-transform"></button>
+            <p id="wishLabel" class="text-sm font-light italic text-amber-100/60 mb-4 h-5"></p>
         </div>
 
         <div class="glass-card p-6 mb-8 space-y-6" id="inputCard">
-            <div class="flex flex-col gap-2">
-                <span id="lblCountry" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase"></span>
-                <select id="countrySelect" class="bg-black/40 border border-white/10 text-white rounded-xl p-3 outline-none"></select>
+            <div class="search-container">
+                <span id="lblCountry" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase block mb-2"></span>
+                <input type="text" id="countryInput" class="search-input" placeholder="...">
+                <span id="clearCountry" class="clear-btn" onclick="clearField('countryInput', 'countryResults', 'clearCountry')">×</span>
+                <div id="countryResults" class="search-results"></div>
             </div>
-            <div class="flex flex-col gap-2">
-                <span id="lblCity" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase"></span>
-                <select id="citySelect" disabled class="bg-black/40 border border-white/10 text-white rounded-xl p-3 outline-none opacity-40"></select>
+            <div class="search-container">
+                <span id="lblCity" class="text-[9px] tracking-widest font-bold opacity-40 ml-1 uppercase block mb-2"></span>
+                <input type="text" id="cityInput" class="search-input opacity-40" placeholder="..." disabled>
+                <span id="clearCity" class="clear-btn" onclick="clearField('cityInput', 'cityResults', 'clearCity')">×</span>
+                <div id="cityResults" class="search-results"></div>
             </div>
         </div>
 
-        <div id="resultCard" class="hidden glass-card p-8 text-center">
-            <h2 id="displayCity" class="gold-title text-2xl font-bold uppercase mb-8"></h2>
+        <div id="resultCard" class="hidden glass-card p-8 text-center relative">
+            <div class="mb-6">
+                <h2 id="displayCity" class="gold-title text-3xl font-bold uppercase leading-tight"></h2>
+                <button onclick="clearStorage()" id="resetBtn" class="text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white/80 transition-colors mt-1 underline decoration-white/20"></button>
+            </div>
+            
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-black/30 rounded-[24px] p-5 border border-white/5">
                     <span id="labelSahur" class="text-[9px] tracking-widest font-bold block mb-3 opacity-40"></span>
@@ -75,62 +97,44 @@
                     <span id="iftarTime" class="text-3xl font-black tracking-tighter">--:--</span>
                 </div>
             </div>
-            <button onclick="clearStorage()" id="resetBtn" class="mt-10 text-[9px] font-black uppercase tracking-widest text-white/20 p-2"></button>
         </div>
     </div>
 
-    <div class="dua-banner text-center">
-        <p class="text-[9px] tracking-[0.3em] text-amber-200/50 font-bold uppercase mb-1">Dua van de dag</p>
-        <p id="duaText" class="text-xs font-medium leading-relaxed text-white/90"></p>
+    <div id="imsakiyeModal">
+        <div class="flex justify-between items-center max-w-[400px] mx-auto mb-6 px-4">
+            <h3 id="modalTitle" class="gold-title text-2xl font-bold"></h3>
+            <button onclick="toggleImsakiye(false)" id="closeModalBtn" class="text-white/40 text-[10px] font-bold uppercase border border-white/10 px-3 py-1 rounded-lg"></button>
+        </div>
+        <div class="modal-content shadow-2xl">
+            <table class="imsakiye-table">
+                <thead class="sticky top-0 bg-black/90 backdrop-blur-md">
+                    <tr><th id="thDate" class="py-4 text-[9px] uppercase opacity-40"></th><th id="thImsak" class="py-4 text-[9px] uppercase opacity-40"></th><th id="thIftar" class="py-4 text-[9px] uppercase opacity-40"></th></tr>
+                </thead>
+                <tbody id="imsakiyeBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dua-banner">
+        <p id="duaLabel" class="text-[9px] tracking-[0.3em] text-amber-200/50 font-bold uppercase mb-1"></p>
+        <p id="duaText" class="text-xs font-medium text-white/90"></p>
     </div>
 
     <script>
         const translations = { 
-            nl: { 
-                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Kies Land", selectCity: "Kies Stad", shareBtn: "Deel status 📤", resetBtn: "Locatie Wijzigen", shareMsg: "Nog {time} tot {target} in {city}! 🌙✨", wishIftar: "Eet smakelijk! 🤲", wishSahur: "Ramadan Mubarak! 🌙",
-                duaLabel: "Dua van de dag",
-                duas: [
-                    "O Allah, vergeef mij en heb medelijden met mij.",
-                    "O Allah, ik vraag U om nuttige kennis en goede voorzieningen.",
-                    "Onze Heer, schenk ons het goede in deze wereld en het Hiernamaals.",
-                    "O Allah, U bent de Vergever en U houdt van vergeving, vergeef mij.",
-                    "O Allah, laat mijn vasten geaccepteerd worden door U."
-                ]
-            },
-            tr: { 
-                mainTitle: "Ramazan", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke Seç", selectCity: "Şehir Seç", shareBtn: "Paylaş 📤", resetBtn: "Şehir Değiştir", shareMsg: "{city} için {target} vaktine kalan süre: {time}! 🌙✨", wishIftar: "Allah kabul etsin! 🤲", wishSahur: "Hayırlı Ramazanlar! 🌙",
-                duaLabel: "Günün Duası",
-                duas: [
-                    "Allah'ım, beni bağışla ve bana merhamet et.",
-                    "Allah'ım, Senden faydalı bir ilim ve helal rızık isterim.",
-                    "Rabbimiz, bize dünyada da ahirette de iyilik ver.",
-                    "Allah'ım, Sen affedicisin, affı seversin, beni affet.",
-                    "Allah'ım, tuttuğumuz oruçları katında kabul eyle."
-                ]
-            },
-            en: { 
-                mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Select Country", selectCity: "Select City", shareBtn: "Share status 📤", resetBtn: "Change Location", shareMsg: "{time} remaining until {target} in {city}! 🌙✨", wishIftar: "Enjoy your Iftar! 🤲", wishSahur: "Ramadan Mubarak! 🌙",
-                duaLabel: "Dua of the Day",
-                duas: [
-                    "O Allah, forgive me and have mercy on me.",
-                    "O Allah, I ask You for beneficial knowledge and good provision.",
-                    "Our Lord, grant us good in this world and the Hereafter.",
-                    "O Allah, You are the Forgiver and love forgiveness, so forgive me.",
-                    "O Allah, let my fasting be accepted by You."
-                ]
-            }
+            nl: { mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Land", selectCity: "Stad of District", resetBtn: "Konum Wijzigen", imsakTitle: "Imsakiye", close: "Sluiten", duaLabel: "Dua van de dag", thDate: "Datum", thImsak: "Imsak", thIftar: "Iftar", duas: ["O Allah, vergeef mij.", "O Allah, accepteer ons vasten.", "O Allah, schenk ons het goede."] },
+            tr: { mainTitle: "Ramazan", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke", selectCity: "Şehir veya İlçe", resetBtn: "Konumu Değiştir", imsakTitle: "İmsakiye", close: "Kapat", duaLabel: "Günün Duası", thDate: "Tarih", thImsak: "İmsak", thIftar: "İftar", duas: ["Allah'ım, bizi bağışla.", "Allah'ım, orucumuzu kabul eyle.", "Allah'ım, bize afiyet ver."] },
+            en: { mainTitle: "Ramadan", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Country", selectCity: "City or District", resetBtn: "Change Location", imsakTitle: "Imsakiye", close: "Close", duaLabel: "Dua of the day", thDate: "Date", thImsak: "Imsak", thIftar: "Iftar", duas: ["O Allah, forgive us.", "O Allah, accept our fasting.", "O Allah, grant us goodness."] }
         };
 
         let currentLang = localStorage.getItem('lang') || 'nl'; 
-        let prayerTimes = null;
-        let activeTargetKey = "";
-        let isCelebrating = false;
+        let prayerTimes = null, fullRamadanData = [], allCountries = [], allCities = [];
 
         function setLanguage(lang) { 
             currentLang = lang; localStorage.setItem('lang', lang); 
             ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => document.getElementById(id).classList.remove('active'));
             document.getElementById('btn-' + lang).classList.add('active');
-            updateUIStrings(); 
+            updateUIStrings();
         }
 
         function updateUIStrings() { 
@@ -138,114 +142,131 @@
             document.getElementById('mainTitle').innerText = t.mainTitle; 
             document.getElementById('labelSahur').innerText = t.labelSahur; 
             document.getElementById('labelIftar').innerText = t.labelIftar; 
-            document.getElementById('shareBtn').innerText = t.shareBtn;
-            document.getElementById('resetBtn').innerText = t.resetBtn;
             document.getElementById('lblCountry').innerText = t.selectCountry;
             document.getElementById('lblCity').innerText = t.selectCity;
-            
-            // Update Dua
+            document.getElementById('imsakBtn').innerText = t.imsakTitle;
+            document.getElementById('modalTitle').innerText = t.imsakTitle;
+            document.getElementById('closeModalBtn').innerText = t.close;
+            document.getElementById('duaLabel').innerText = t.duaLabel;
+            document.getElementById('resetBtn').innerText = t.resetBtn;
+            document.getElementById('thDate').innerText = t.thDate;
+            document.getElementById('thImsak').innerText = t.thImsak;
+            document.getElementById('thIftar').innerText = t.thIftar;
             const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-            const duaIndex = dayOfYear % t.duas.length;
-            document.getElementById('duaText').innerText = t.duas[duaIndex];
-            document.querySelector('.dua-banner p:first-child').innerText = t.duaLabel;
+            document.getElementById('duaText').innerText = t.duas[dayOfYear % t.duas.length];
         }
 
-        function triggerCelebration() {
-            if (isCelebrating) return;
-            isCelebrating = true;
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#fde68a', '#d97706', '#ffffff'] });
-            const card = document.getElementById('resultCard');
-            card.classList.add('celebrate-glow');
-            document.getElementById('wishLabel').innerText = activeTargetKey === 'iftar' ? translations[currentLang].wishIftar : translations[currentLang].wishSahur;
-            setTimeout(() => {
-                card.classList.remove('celebrate-glow');
-                document.getElementById('wishLabel').innerText = "";
-                isCelebrating = false;
-            }, 10000);
+        function clearField(inputId, resultsId, btnId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(resultsId).style.display = 'none';
+            document.getElementById(btnId).style.display = 'none';
+            if(inputId === 'countryInput') {
+                const ci = document.getElementById('cityInput');
+                ci.disabled = true; ci.value = ''; ci.classList.add('opacity-40');
+                document.getElementById('clearCity').style.display = 'none';
+            }
         }
 
-        function shareStatus() {
-            const t = translations[currentLang];
-            const timeLeft = document.getElementById('timer').innerText;
-            const city = document.getElementById('displayCity').innerText;
-            const targetName = activeTargetKey === 'sahur' ? t.labelSahur : t.labelIftar;
-            const message = t.shareMsg.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetName);
-            if (navigator.share) navigator.share({ title: 'Ramadan Tracker', text: message });
+        function setupSearch(inputId, resultsId, btnId, dataArray, onSelect) {
+            const input = document.getElementById(inputId), results = document.getElementById(resultsId), btn = document.getElementById(btnId);
+            input.oninput = (e) => {
+                const val = e.target.value.toLowerCase();
+                btn.style.display = val ? 'block' : 'none';
+                results.innerHTML = '';
+                if (!val) { results.style.display = 'none'; return; }
+                const filtered = dataArray.filter(i => i.toLowerCase().startsWith(val)).slice(0, 10);
+                if (filtered.length > 0) {
+                    results.style.display = 'block';
+                    filtered.forEach(item => {
+                        const div = document.createElement('div'); div.className = 'result-item'; div.innerText = item;
+                        div.onclick = () => { input.value = item; results.style.display = 'none'; onSelect(item); };
+                        results.appendChild(div);
+                    });
+                } else { results.style.display = 'none'; }
+            };
+            input.onkeydown = (e) => { if (e.key === 'Enter' && input.value) { results.style.display = 'none'; onSelect(input.value); } };
         }
 
-        async function fetchCountries() { 
+        async function init() {
+            setLanguage(currentLang);
             const res = await fetch('https://countriesnow.space/api/v0.1/countries');
             const json = await res.json();
-            const s = document.getElementById('countrySelect');
-            s.innerHTML = `<option value="">--</option>`;
-            json.data.forEach(c => s.add(new Option(c.country, c.country)));
-        }
-
-        document.getElementById('countrySelect').onchange = async (e) => {
-            const s = document.getElementById('citySelect');
-            const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ country: e.target.value }) 
+            allCountries = json.data.map(c => c.country);
+            setupSearch('countryInput', 'countryResults', 'clearCountry', allCountries, async (country) => {
+                const cityInput = document.getElementById('cityInput');
+                cityInput.disabled = false; cityInput.classList.remove('opacity-40');
+                const resC = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ country })
+                });
+                const jsonC = await resC.json();
+                allCities = jsonC.data;
+                setupSearch('cityInput', 'cityResults', 'clearCity', allCities, (city) => {
+                    localStorage.setItem('selectedCountry', country); localStorage.setItem('selectedCity', city);
+                    updateData(city, country);
+                });
             });
-            const json = await res.json();
-            s.innerHTML = `<option value="">--</option>`;
-            json.data.forEach(c => s.add(new Option(c, c)));
-            s.disabled = false; s.classList.remove('opacity-40');
-        };
-
-        document.getElementById('citySelect').onchange = (e) => { 
-            const country = document.getElementById('countrySelect').value;
-            localStorage.setItem('selectedCountry', country);
-            localStorage.setItem('selectedCity', e.target.value);
-            updateData(e.target.value, country);
-        };
-
-        async function updateData(city, country) { 
-            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13&school=1`);
-            const json = await res.json();
-            prayerTimes = json.data.timings;
-            document.getElementById('displayCity').innerText = city;
-            document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
-            document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
-            document.getElementById('resultCard').classList.remove('hidden');
-            document.getElementById('countdownContainer').classList.remove('hidden');
-            startTimer();
+            const sc = localStorage.getItem('selectedCountry'), sci = localStorage.getItem('selectedCity');
+            if (sc && sci) { 
+                document.getElementById('countryInput').value = sc; document.getElementById('cityInput').value = sci;
+                document.getElementById('cityInput').disabled = false; document.getElementById('cityInput').classList.remove('opacity-40');
+                document.getElementById('clearCountry').style.display = 'block'; document.getElementById('clearCity').style.display = 'block';
+                updateData(sci, sc); 
+            }
         }
+
+        async function updateData(city, country) {
+            try {
+                const resT = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
+                const jsonT = await resT.json();
+                prayerTimes = jsonT.data.timings;
+                const resF = await fetch(`https://api.aladhan.com/v1/calendarByCity/2026/2?city=${city}&country=${country}&method=13`);
+                const resM = await fetch(`https://api.aladhan.com/v1/calendarByCity/2026/3?city=${city}&country=${country}&method=13`);
+                const jF = await resF.json(), jM = await resM.json();
+                fullRamadanData = [...jF.data.filter(d => parseInt(d.date.gregorian.day) >= 18), ...jM.data.filter(d => parseInt(d.date.gregorian.day) <= 20)];
+                document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
+                document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
+                document.getElementById('displayCity').innerText = city;
+                document.getElementById('inputCard').classList.add('hidden');
+                document.getElementById('resultCard').classList.remove('hidden');
+                document.getElementById('countdownContainer').classList.remove('hidden');
+                renderImsakiye(); startTimer();
+            } catch(e) { alert("Locatie niet gevonden."); }
+        }
+
+        function renderImsakiye() {
+            const body = document.getElementById('imsakiyeBody');
+            const now = new Date();
+            body.innerHTML = '';
+            fullRamadanData.forEach(day => {
+                const d = parseInt(day.date.gregorian.day), m = parseInt(day.date.gregorian.month.number);
+                const tr = document.createElement('tr');
+                if(d === now.getDate() && m === (now.getMonth() + 1)) tr.className = 'today';
+                tr.innerHTML = `<td>${d} ${m === 2 ? 'Feb' : 'Mar'}</td><td>${day.timings.Imsak.split(' ')[0]}</td><td>${day.timings.Maghrib.split(' ')[0]}</td>`;
+                body.appendChild(tr);
+            });
+        }
+
+        function toggleImsakiye(show) { document.getElementById('imsakiyeModal').style.display = show ? 'block' : 'none'; }
 
         function startTimer() { 
             if(window.timerInterval) clearInterval(window.timerInterval);
             window.timerInterval = setInterval(() => {
-                if (isCelebrating) return;
-                const t = translations[currentLang];
-                const now = new Date(); 
+                const now = new Date();
                 const parseT = (s, n = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(n) d.setDate(d.getDate()+1); return d; }; 
-                const imsak = parseT(prayerTimes.Imsak); 
-                const iftar = parseT(prayerTimes.Maghrib); 
+                const imsak = parseT(prayerTimes.Imsak), iftar = parseT(prayerTimes.Maghrib); 
                 let target, label; 
-                if (now < imsak) { target = imsak; label = t.waitSahur; activeTargetKey = 'sahur'; }
-                else if (now < iftar) { target = iftar; label = t.waitIftar; activeTargetKey = 'iftar'; }
-                else { target = parseT(prayerTimes.Imsak, 1); label = t.waitSahur; activeTargetKey = 'sahur'; } 
-                const diff = target - now; 
-                if (diff <= 1000 && diff > -1000) triggerCelebration();
-                const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); 
+                if (now < imsak) { target = imsak; label = translations[currentLang].waitSahur; }
+                else if (now < iftar) { target = iftar; label = translations[currentLang].waitIftar; }
+                else { target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; } 
+                const diff = target - now;
+                const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000); 
                 document.getElementById('countdownLabel').innerText = label; 
                 document.getElementById('timer').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; 
             }, 1000); 
         }
 
         function clearStorage() { localStorage.clear(); location.reload(); }
-        async function init() { 
-            setLanguage(currentLang); 
-            await fetchCountries(); 
-            const sc = localStorage.getItem('selectedCountry'); 
-            const sci = localStorage.getItem('selectedCity'); 
-            if (sc && sci) {
-                document.getElementById('countrySelect').value = sc;
-                await document.getElementById('countrySelect').onchange({target:{value:sc}});
-                document.getElementById('citySelect').value = sci;
-                updateData(sci, sc);
-            }
-        }
         init();
     </script>
 </body>
