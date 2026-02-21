@@ -9,12 +9,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ramadan">
     
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png?v=2">
     
-    <link rel="apple-touch-startup-image" href="icon.png">
+    <link rel="apple-touch-startup-image" href="icon.png?v=2">
     
     <meta name="theme-color" content="#021a1a">
-    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'icon.png','sizes':'512x512','type':'image/png'}]}">
+    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'icon.png?v=2','sizes':'512x512','type':'image/png'}]}">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -31,7 +31,6 @@
         select { background-color: rgba(0, 0, 0, 0.5) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 16px !important; padding: 12px !important; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fde68a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2rem; }
         .share-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px 16px; font-size: 10px; font-weight: bold; tracking-widest uppercase; transition: all 0.2s; }
         .share-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
-        .lang-btn { transition: all 0.3s ease; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -73,112 +72,19 @@
             <button id="resetBtn" onclick="clearStorage()" class="mt-10 text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-white transition"></button>
         </div>
     </div>
-
     <script>
-        const translations = { 
-            nl: { mainTitle: "Ramadan", factLabel: "Wist je dat?", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Kies Land", selectCity: "Kies Stad", shareBtn: "Deel status 📤", resetBtn: "Locatie Wijzigen", shareTextIftar: "Nog {time} tot Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "Nog {time} tot Sahur in {city}! ({target}) 🌙✨", facts: ["Ramadan is de maand van de Koran.", "De Profeet verbrak het vasten met dadels.", "Sahur is een gezegende maaltijd.", "Vasten versterkt de discipline."] },
-            tr: { mainTitle: "Ramazan", factLabel: "Biliyor musunuz?", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke Seç", selectCity: "Şehir Seç", shareBtn: "Paylaş 📤", resetBtn: "Şehir Değiştir", shareTextIftar: "{city} için İftara kalan süre: {time}! ({target}) 🌙✨", shareTextSahur: "{city} için Sahura kalan süre: {time}! ({target}) 🌙✨", facts: ["Ramazan Kur'an ayıdır.", "Oruç şükürdür.", "Sahurda bereket vardır.", "Oruç kötülüklere kalkandır."] },
-            en: { mainTitle: "Ramadan", factLabel: "Did you know?", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Select Country", selectCity: "Select City", shareBtn: "Share status 📤", resetBtn: "Change Location", shareTextIftar: "{time} remaining until Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "{time} remaining until Sahur in {city}! ({target}) 🌙✨", facts: ["Ramadan is the month of Quran.", "The Prophet broke fast with dates.", "Sahur has blessings.", "Fasting builds character."] }
-        };
-
-        let currentLang = localStorage.getItem('lang') || 'nl'; 
-        let prayerTimes = null; 
-        let factIndex = 0;
-        let isWaitingForIftar = true;
-
-        function setLanguage(lang) { 
-            currentLang = lang; localStorage.setItem('lang', lang); 
-            ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => {
-                const btn = document.getElementById(id);
-                if(btn) btn.classList.add('opacity-40');
-            });
-            const activeBtn = document.getElementById('btn-' + lang);
-            if(activeBtn) activeBtn.classList.remove('opacity-40');
-            updateUIStrings(); 
-        }
-
-        function updateUIStrings() { 
-            const t = translations[currentLang]; 
-            document.getElementById('mainTitle').innerText = t.mainTitle; 
-            document.getElementById('factLabel').innerText = t.factLabel; 
-            document.getElementById('labelSahur').innerText = t.labelSahur; 
-            document.getElementById('labelIftar').innerText = t.labelIftar; 
-            document.getElementById('shareBtn').innerText = t.shareBtn;
-            document.getElementById('resetBtn').innerText = t.resetBtn;
-            document.getElementById('lblCountry').innerText = t.selectCountry.toUpperCase();
-            document.getElementById('lblCity').innerText = t.selectCity.toUpperCase();
-            document.getElementById('factText').innerText = t.facts[factIndex]; 
-        }
-
-        function shareStatus() {
-            const timeLeft = document.getElementById('timer').innerText;
-            const city = document.getElementById('displayCity').innerText;
-            const t = translations[currentLang];
-            const targetTime = isWaitingForIftar ? prayerTimes.Maghrib : prayerTimes.Imsak;
-            const template = isWaitingForIftar ? t.shareTextIftar : t.shareTextSahur;
-            const text = template.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetTime);
-            if (navigator.share) { navigator.share({ title: 'Ramadan Tracker', text: text }).catch(() => {}); }
-            else { navigator.clipboard.writeText(text); alert("Copied!"); }
-        }
-
-        async function fetchCountries() { 
-            const res = await fetch('https://countriesnow.space/api/v0.1/countries');
-            const json = await res.json();
-            const s = document.getElementById('countrySelect');
-            s.innerHTML = `<option value="">${translations[currentLang].selectCountry}</option>`;
-            json.data.forEach(c => s.add(new Option(c.country, c.country)));
-        }
-
-        async function loadCities(country) { 
-            const s = document.getElementById('citySelect');
-            s.disabled = true;
-            const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ country: country }) 
-            });
-            const json = await res.json();
-            s.innerHTML = `<option value="">${translations[currentLang].selectCity}</option>`;
-            json.data.forEach(c => s.add(new Option(c, c)));
-            s.disabled = false; s.classList.remove('opacity-40');
-        }
-
+        // De JS blijft hetzelfde als de vorige werkende versie
+        const translations = { nl: { mainTitle: "Ramadan", factLabel: "Wist je dat?", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "TOT SAHUR", waitIftar: "TOT IFTAR", selectCountry: "Kies Land", selectCity: "Kies Stad", shareBtn: "Deel status 📤", resetBtn: "Locatie Wijzigen", shareTextIftar: "Nog {time} tot Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "Nog {time} tot Sahur in {city}! ({target}) 🌙✨", facts: ["Ramadan is de maand van de Koran.", "De Profeet verbrak het vasten met dadels.", "Sahur is een gezegende maaltijd.", "Vasten versterkt de discipline."] }, tr: { mainTitle: "Ramazan", factLabel: "Biliyor musunuz?", labelSahur: "SAHUR", labelIftar: "İFTAR", waitSahur: "SAHURA KALAN", waitIftar: "İFTARA KALAN", selectCountry: "Ülke Seç", selectCity: "Şehir Seç", shareBtn: "Paylaş 📤", resetBtn: "Şehir Değiştir", shareTextIftar: "{city} için İftara kalan süre: {time}! ({target}) 🌙✨", shareTextSahur: "{city} için Sahura kalan süre: {time}! ({target}) 🌙✨", facts: ["Ramazan Kur'an ayıdır.", "Oruç şükürdür.", "Sahurda bereket vardır.", "Oruç kötülüklere kalkandır."] }, en: { mainTitle: "Ramadan", factLabel: "Did you know?", labelSahur: "SAHUR", labelIftar: "IFTAR", waitSahur: "UNTIL SAHUR", waitIftar: "UNTIL IFTAR", selectCountry: "Select Country", selectCity: "Select City", shareBtn: "Share status 📤", resetBtn: "Change Location", shareTextIftar: "{time} remaining until Iftar in {city}! ({target}) 🌙✨", shareTextSahur: "{time} remaining until Sahur in {city}! ({target}) 🌙✨", facts: ["Ramadan is the month of Quran.", "The Prophet broke fast with dates.", "Sahur has blessings.", "Fasting builds character."] } };
+        let currentLang = localStorage.getItem('lang') || 'nl'; let prayerTimes = null; let factIndex = 0; let isWaitingForIftar = true;
+        function setLanguage(lang) { currentLang = lang; localStorage.setItem('lang', lang); ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => { const btn = document.getElementById(id); if(btn) btn.classList.add('opacity-40'); }); const activeBtn = document.getElementById('btn-' + lang); if(activeBtn) activeBtn.classList.remove('opacity-40'); updateUIStrings(); }
+        function updateUIStrings() { const t = translations[currentLang]; document.getElementById('mainTitle').innerText = t.mainTitle; document.getElementById('factLabel').innerText = t.factLabel; document.getElementById('labelSahur').innerText = t.labelSahur; document.getElementById('labelIftar').innerText = t.labelIftar; document.getElementById('shareBtn').innerText = t.shareBtn; document.getElementById('resetBtn').innerText = t.resetBtn; document.getElementById('lblCountry').innerText = t.selectCountry.toUpperCase(); document.getElementById('lblCity').innerText = t.selectCity.toUpperCase(); document.getElementById('factText').innerText = t.facts[factIndex]; }
+        function shareStatus() { const timeLeft = document.getElementById('timer').innerText; const city = document.getElementById('displayCity').innerText; const t = translations[currentLang]; const targetTime = isWaitingForIftar ? prayerTimes.Maghrib : prayerTimes.Imsak; const template = isWaitingForIftar ? t.shareTextIftar : t.shareTextSahur; const text = template.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetTime); if (navigator.share) { navigator.share({ title: 'Ramadan Tracker', text: text }).catch(() => {}); } else { navigator.clipboard.writeText(text); alert("Copied!"); } }
+        async function fetchCountries() { const res = await fetch('https://countriesnow.space/api/v0.1/countries'); const json = await res.json(); const s = document.getElementById('countrySelect'); s.innerHTML = `<option value="">${translations[currentLang].selectCountry}</option>`; json.data.forEach(c => s.add(new Option(c.country, c.country))); }
+        async function loadCities(country) { const s = document.getElementById('citySelect'); s.disabled = true; const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ country: country }) }); const json = await res.json(); s.innerHTML = `<option value="">${translations[currentLang].selectCity}</option>`; json.data.forEach(c => s.add(new Option(c, c))); s.disabled = false; s.classList.remove('opacity-40'); }
         document.getElementById('countrySelect').onchange = (e) => { if(e.target.value) loadCities(e.target.value); };
-        document.getElementById('citySelect').onchange = (e) => { 
-            if(e.target.value) {
-                localStorage.setItem('selectedCountry', document.getElementById('countrySelect').value);
-                localStorage.setItem('selectedCity', e.target.value);
-                updateData(e.target.value, document.getElementById('countrySelect').value);
-            }
-        };
-
-        async function updateData(city, country) { 
-            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
-            const json = await res.json();
-            prayerTimes = json.data.timings;
-            document.getElementById('displayCity').innerText = city;
-            document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
-            document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
-            document.getElementById('resultCard').classList.remove('hidden');
-            document.getElementById('countdownContainer').classList.remove('hidden');
-            startTimer();
-        }
-        
-        function startTimer() { 
-            if(window.timerInterval) clearInterval(window.timerInterval);
-            window.timerInterval = setInterval(() => { 
-                const now = new Date(); 
-                const parseT = (s, addDays = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(addDays) d.setDate(d.getDate() + 1); return d; }; 
-                const imsak = parseT(prayerTimes.Imsak); const iftar = parseT(prayerTimes.Maghrib); 
-                let target, label; 
-                if (now < imsak) { target = imsak; label = translations[currentLang].waitSahur; isWaitingForIftar = false; }
-                else if (now < iftar) { target = iftar; label = translations[currentLang].waitIftar; isWaitingForIftar = true; }
-                else { target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; isWaitingForIftar = false; } 
-                const diff = target - now; 
-                const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); 
-                document.getElementById('countdownLabel').innerText = label; 
-                document.getElementById('timer').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; 
-            }, 1000); 
-        }
+        document.getElementById('citySelect').onchange = (e) => { if(e.target.value) { localStorage.setItem('selectedCountry', document.getElementById('countrySelect').value); localStorage.setItem('selectedCity', e.target.value); updateData(e.target.value, document.getElementById('countrySelect').value); } };
+        async function updateData(city, country) { const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`); const json = await res.json(); prayerTimes = json.data.timings; document.getElementById('displayCity').innerText = city; document.getElementById('imsakTime').innerText = prayerTimes.Imsak; document.getElementById('iftarTime').innerText = prayerTimes.Maghrib; document.getElementById('resultCard').classList.remove('hidden'); document.getElementById('countdownContainer').classList.remove('hidden'); startTimer(); }
+        function startTimer() { if(window.timerInterval) clearInterval(window.timerInterval); window.timerInterval = setInterval(() => { const now = new Date(); const parseT = (s, addDays = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(addDays) d.setDate(d.getDate() + 1); return d; }; const imsak = parseT(prayerTimes.Imsak); const iftar = parseT(prayerTimes.Maghrib); let target, label; if (now < imsak) { target = imsak; label = translations[currentLang].waitSahur; isWaitingForIftar = false; } else if (now < iftar) { target = iftar; label = translations[currentLang].waitIftar; isWaitingForIftar = true; } else { target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; isWaitingForIftar = false; } const diff = target - now; const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); document.getElementById('countdownLabel').innerText = label; document.getElementById('timer').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; }, 1000); }
         function clearStorage() { localStorage.clear(); location.reload(); }
         function nextFact() { factIndex = (factIndex + 1) % translations[currentLang].facts.length; document.getElementById('factText').innerText = translations[currentLang].facts[factIndex]; }
         async function init() { setLanguage(currentLang); const sc = localStorage.getItem('selectedCountry'); const sci = localStorage.getItem('selectedCity'); await fetchCountries(); if (sc) { document.getElementById('countrySelect').value = sc; await loadCities(sc); if (sci) { document.getElementById('citySelect').value = sci; updateData(sci, sc); } } }
