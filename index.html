@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ramadan Smart Tracker</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ramadan">
+    
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <link rel="apple-touch-startup-image" href="icon.png">
+    
     <meta name="theme-color" content="#021a1a">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2319/2319914.png">
-    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'https://cdn-icons-png.flaticon.com/512/2319/2319914.png','sizes':'512x512','type':'image/png'}]}">
+    <link rel="manifest" href="data:application/manifest+json,{'name':'Ramadan Tracker','short_name':'Ramadan','start_url':'.','display':'standalone','background_color':'#021a1a','theme_color':'#064e43','icons':[{'src':'icon.png','sizes':'512x512','type':'image/png'}]}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -35,12 +42,10 @@
             <button onclick="setLanguage('nl')" id="btn-nl" class="lang-btn opacity-40">NL</button> 
             <button onclick="setLanguage('en')" id="btn-en" class="lang-btn opacity-40">EN</button>
         </div>
-
         <header class="text-center mb-8">
             <h1 id="mainTitle" class="gold-title text-5xl mb-2">Ramadan</h1>
             <p class="text-[10px] tracking-[0.6em] opacity-30 uppercase font-bold">Smart Tracker 2026</p>
         </header>
-
         <div id="factBox" onclick="nextFact()" class="glass-card p-6 mb-8 active:scale-95 transition-all">
             <div class="flex items-start gap-4">
                 <span class="text-3xl">🌙</span>
@@ -50,18 +55,15 @@
                 </div>
             </div>
         </div>
-
         <div id="countdownContainer" class="hidden mb-10 text-center">
             <p id="countdownLabel" class="time-label mb-2 text-amber-200/40 uppercase"></p>
             <div id="timer" class="text-7xl font-black tracking-tighter tabular-nums drop-shadow-2xl text-white mb-4">00:00:00</div>
             <button id="shareBtn" onclick="shareStatus()" class="share-btn text-amber-200/80"></button>
         </div>
-
         <div class="glass-card p-6 mb-8 space-y-6">
             <div class="flex flex-col gap-2"><span id="lblCountry" class="time-label ml-1"></span><select id="countrySelect" class="w-full"></select></div>
             <div class="flex flex-col gap-2"><span id="lblCity" class="time-label ml-1"></span><select id="citySelect" disabled class="w-full opacity-40"></select></div>
         </div>
-
         <div id="resultCard" class="hidden glass-card p-8 text-center mb-8">
             <h2 id="displayCity" class="gold-title text-2xl font-bold uppercase mb-8"></h2>
             <div class="grid grid-cols-2 gap-4">
@@ -85,33 +87,14 @@
         let isWaitingForIftar = true;
 
         function setLanguage(lang) { 
-            currentLang = lang; 
-            localStorage.setItem('lang', lang); 
-            
-            // RESET alle knoppen eerst naar doorzichtig (opacity-40)
-            const buttons = ['btn-tr', 'btn-nl', 'btn-en'];
-            buttons.forEach(id => {
+            currentLang = lang; localStorage.setItem('lang', lang); 
+            ['btn-tr', 'btn-nl', 'btn-en'].forEach(id => {
                 const btn = document.getElementById(id);
-                if(btn) {
-                    btn.classList.add('opacity-40');
-                    btn.style.opacity = "0.4"; // Extra force voor mobiel
-                }
+                if(btn) btn.classList.add('opacity-40');
             });
-
-            // ACTIVEER de gekozen knop (opacity-100)
             const activeBtn = document.getElementById('btn-' + lang);
-            if(activeBtn) {
-                activeBtn.classList.remove('opacity-40');
-                activeBtn.style.opacity = "1"; // Extra force voor mobiel
-            }
-
+            if(activeBtn) activeBtn.classList.remove('opacity-40');
             updateUIStrings(); 
-            // Update alleen de teksten van de dropdowns zonder ze opnieuw te laden om flikkeren te voorkomen
-            const t = translations[currentLang];
-            const countrySelect = document.getElementById('countrySelect');
-            if(countrySelect.options[0]) countrySelect.options[0].text = t.selectCountry;
-            const citySelect = document.getElementById('citySelect');
-            if(citySelect.options[0]) citySelect.options[0].text = t.selectCity;
         }
 
         function updateUIStrings() { 
@@ -134,39 +117,29 @@
             const targetTime = isWaitingForIftar ? prayerTimes.Maghrib : prayerTimes.Imsak;
             const template = isWaitingForIftar ? t.shareTextIftar : t.shareTextSahur;
             const text = template.replace('{time}', timeLeft).replace('{city}', city).replace('{target}', targetTime);
-            
-            if (navigator.share) {
-                navigator.share({ title: 'Ramadan Tracker', text: text }).catch(() => {});
-            } else {
-                navigator.clipboard.writeText(text);
-                alert(currentLang === 'tr' ? "Kopyalandı!" : (currentLang === 'en' ? "Copied!" : "Gekopieerd!"));
-            }
+            if (navigator.share) { navigator.share({ title: 'Ramadan Tracker', text: text }).catch(() => {}); }
+            else { navigator.clipboard.writeText(text); alert("Copied!"); }
         }
 
         async function fetchCountries() { 
-            try {
-                const res = await fetch('https://countriesnow.space/api/v0.1/countries');
-                const json = await res.json();
-                const s = document.getElementById('countrySelect');
-                s.innerHTML = `<option value="">${translations[currentLang].selectCountry}</option>`;
-                json.data.forEach(c => s.add(new Option(c.country, c.country)));
-            } catch(e) { console.error(e); }
+            const res = await fetch('https://countriesnow.space/api/v0.1/countries');
+            const json = await res.json();
+            const s = document.getElementById('countrySelect');
+            s.innerHTML = `<option value="">${translations[currentLang].selectCountry}</option>`;
+            json.data.forEach(c => s.add(new Option(c.country, c.country)));
         }
 
         async function loadCities(country) { 
             const s = document.getElementById('citySelect');
             s.disabled = true;
-            try {
-                const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ country: country }) 
-                });
-                const json = await res.json();
-                s.innerHTML = `<option value="">${translations[currentLang].selectCity}</option>`;
-                json.data.forEach(c => s.add(new Option(c, c)));
-                s.disabled = false;
-                s.classList.remove('opacity-40');
-            } catch(e) { console.error(e); }
+            const res = await fetch('https://countriesnow.space/api/v0.1/countries/cities', { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ country: country }) 
+            });
+            const json = await res.json();
+            s.innerHTML = `<option value="">${translations[currentLang].selectCity}</option>`;
+            json.data.forEach(c => s.add(new Option(c, c)));
+            s.disabled = false; s.classList.remove('opacity-40');
         }
 
         document.getElementById('countrySelect').onchange = (e) => { if(e.target.value) loadCities(e.target.value); };
@@ -179,44 +152,27 @@
         };
 
         async function updateData(city, country) { 
-            try {
-                const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
-                const json = await res.json();
-                prayerTimes = json.data.timings;
-                document.getElementById('displayCity').innerText = city;
-                document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
-                document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
-                document.getElementById('resultCard').classList.remove('hidden');
-                document.getElementById('countdownContainer').classList.remove('hidden');
-                startTimer();
-            } catch(e) { console.error(e); }
+            const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=13`);
+            const json = await res.json();
+            prayerTimes = json.data.timings;
+            document.getElementById('displayCity').innerText = city;
+            document.getElementById('imsakTime').innerText = prayerTimes.Imsak;
+            document.getElementById('iftarTime').innerText = prayerTimes.Maghrib;
+            document.getElementById('resultCard').classList.remove('hidden');
+            document.getElementById('countdownContainer').classList.remove('hidden');
+            startTimer();
         }
         
         function startTimer() { 
             if(window.timerInterval) clearInterval(window.timerInterval);
             window.timerInterval = setInterval(() => { 
                 const now = new Date(); 
-                const parseT = (s, addDays = 0) => { 
-                    const [h, m] = s.split(':'); 
-                    const d = new Date(); d.setHours(h, m, 0); 
-                    if(addDays) d.setDate(d.getDate() + 1); 
-                    return d; 
-                }; 
-                const imsak = parseT(prayerTimes.Imsak); 
-                const iftar = parseT(prayerTimes.Maghrib); 
+                const parseT = (s, addDays = 0) => { const [h, m] = s.split(':'); const d = new Date(); d.setHours(h, m, 0); if(addDays) d.setDate(d.getDate() + 1); return d; }; 
+                const imsak = parseT(prayerTimes.Imsak); const iftar = parseT(prayerTimes.Maghrib); 
                 let target, label; 
-
-                if (now < imsak) { 
-                    target = imsak; label = translations[currentLang].waitSahur; isWaitingForIftar = false;
-                    document.getElementById('imsakBox').className = "bg-black/40 rounded-[24px] p-5 glow-sahur"; 
-                    document.getElementById('iftarBox').className = "bg-black/20 rounded-[24px] p-5 border border-white/5 opacity-40"; 
-                } else if (now < iftar) { 
-                    target = iftar; label = translations[currentLang].waitIftar; isWaitingForIftar = true;
-                    document.getElementById('iftarBox').className = "bg-black/40 rounded-[24px] p-5 glow-iftar"; 
-                    document.getElementById('imsakBox').className = "bg-black/20 rounded-[24px] p-5 border border-white/5 opacity-40"; 
-                } else { 
-                    target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; isWaitingForIftar = false;
-                } 
+                if (now < imsak) { target = imsak; label = translations[currentLang].waitSahur; isWaitingForIftar = false; }
+                else if (now < iftar) { target = iftar; label = translations[currentLang].waitIftar; isWaitingForIftar = true; }
+                else { target = parseT(prayerTimes.Imsak, 1); label = translations[currentLang].waitSahur; isWaitingForIftar = false; } 
                 const diff = target - now; 
                 const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000); 
                 document.getElementById('countdownLabel').innerText = label; 
@@ -225,21 +181,7 @@
         }
         function clearStorage() { localStorage.clear(); location.reload(); }
         function nextFact() { factIndex = (factIndex + 1) % translations[currentLang].facts.length; document.getElementById('factText').innerText = translations[currentLang].facts[factIndex]; }
-        
-        async function init() { 
-            setLanguage(currentLang); 
-            const sc = localStorage.getItem('selectedCountry'); 
-            const sci = localStorage.getItem('selectedCity'); 
-            await fetchCountries();
-            if (sc) { 
-                document.getElementById('countrySelect').value = sc; 
-                await loadCities(sc); 
-                if (sci) { 
-                    document.getElementById('citySelect').value = sci; 
-                    updateData(sci, sc); 
-                } 
-            } 
-        }
+        async function init() { setLanguage(currentLang); const sc = localStorage.getItem('selectedCountry'); const sci = localStorage.getItem('selectedCity'); await fetchCountries(); if (sc) { document.getElementById('countrySelect').value = sc; await loadCities(sc); if (sci) { document.getElementById('citySelect').value = sci; updateData(sci, sc); } } }
         init();
     </script>
 </body>
